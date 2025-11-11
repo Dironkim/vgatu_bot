@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "build": "tsc",
+    "start": "node index.js"
+  },
   "type": "module",
   "dependencies": {
     "@maxhub/max-bot-api": "^0.2.1",
