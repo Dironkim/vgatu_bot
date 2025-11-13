@@ -3,43 +3,58 @@ import { Bot } from '@maxhub/max-bot-api';
 
 const token = process.env.BOT_TOKEN;
 if (!token) {
-  console.error('BOT_TOKEN не найден в окружении');
+  console.error('BOT_TOKEN не найден');
   process.exit(1);
 }
 
 const bot = new Bot(token);
 
-
-bot.catch(async (err:any) => {
-  console.error('Ошибка в работе бота:', err);
-
-  // Проверяем тип ошибки
-  if (
-    err?.code === 'ECONNRESET' ||
-    err?.message?.includes('fetch failed') ||
-    err?.message?.includes('ECONNREFUSED')
-  ) {
-    console.warn('Потеря соединения с MAX API. Перезапуск через 10 секунд...');
-    await new Promise((resolve) => setTimeout(resolve, 10_000));
-    try {
-      await bot.start();
-      console.log('Переподключение успешно.');
-    } catch (e) {
-      console.error('Ошибка при переподключении:', e);
-    }
-  } else {
-    // Все остальные ошибки просто логируем, не выходим
-    console.error('Неизвестная ошибка:', err);
-  }
+// Обработка ошибок SDK
+bot.catch(async (err: any) => {
+  console.error('Ошибка во время работы бота:', err);
 });
 
-// Функция для запуска бота с защитой от обрывов
+// Функция запуска бота с защитой от обрывов соединения
+async function startBot() {
+  try {
+    console.log('Запуск бота...');
+    bot.on('bot_started', (ctx: any) =>
+      ctx.reply('Привет! Я - официальный чат-бот Вятского агротехнологического университета.')
+    );
 
-console.log('Запуск бота...');
-bot.on('bot_started', (ctx: any) =>
-    ctx.reply('Привет! Я - официальный чат-бот Вятского агротехнологического университета.')
-);
-bot.on('message_created', (ctx: any) => ctx.reply('Я еще нахожусь в разработке и не могу ответить на Ваш вопрос.'));
-bot.start();
-console.log('Бот успешно запущен и слушает события.');
-  
+    bot.on('message_created', (ctx: any) =>
+      ctx.reply('Я ещё нахожусь в разработке и не могу ответить на ваш вопрос.')
+    );
+
+    await bot.start();
+    console.log('Бот успешно запущен и слушает события.');
+  } catch (err: any) {
+    console.error('Ошибка при запуске бота:', err.message || err);
+
+    if (
+      err.code === 'ECONNRESET' ||
+      err.message?.includes('fetch failed') ||
+      err.message?.includes('Client network socket disconnected')
+    ) {
+      console.warn('Потеря соединения. Перезапуск через 5 секунд...');
+      await new Promise((resolve) => setTimeout(resolve, 5_000));
+      await startBot(); // повторный запуск
+    } else {
+      console.error('Критическая ошибка. Остановка.');
+      process.exit(1);
+    }
+  }
+}
+
+// Глобальные обработчики на случай непойманных исключений
+process.on('unhandledRejection', (err) => {
+  console.error('Необработанное исключение:', err);
+  setTimeout(startBot, 5_000);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Ошибка в Node:', err);
+  setTimeout(startBot, 5_000);
+});
+
+startBot();
