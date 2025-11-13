@@ -23,9 +23,9 @@ async function startBot() {
       const user = ctx.user || ctx.message?.user;
 
       if (user) {
-        const { id, first_name, last_name, username } = user;
+        const { user_id, first_name, last_name, username } = user;
         console.log(
-          `[ПОДКЛЮЧЕНИЕ] ${first_name || ''} ${last_name || ''} (${username || 'без username'}), ID: ${id}`
+          `[ПОДКЛЮЧЕНИЕ] ${first_name || ''} ${last_name || ''} (${username || 'без username'}), ID: ${user_id}`
         );
       } else {
         console.log('[ПОДКЛЮЧЕНИЕ] Не удалось определить пользователя');
