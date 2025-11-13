@@ -18,16 +18,31 @@ bot.catch(async (err: any) => {
 async function startBot() {
   try {
     console.log('Запуск бота...');
-    bot.on('bot_started', (ctx: any) =>
+
+    bot.on('bot_started', (ctx: any) => {
       ctx.reply('Привет! Я - официальный чат-бот Вятского агротехнологического университета.')
-    );
+      const user = ctx.user || ctx.message?.user;
+
+      if (user) {
+        const { id, first_name, last_name, username } = user;
+        console.log(
+          `[ПОДКЛЮЧЕНИЕ] ${first_name || ''} ${last_name || ''} (${username || 'без username'}), ID: ${id}`
+        );
+      } else {
+        console.log('[ПОДКЛЮЧЕНИЕ] Не удалось определить пользователя');
+      }
+
+      ctx.reply('Привет! Я - официальный чат-бот Вятского агротехнологического университета.');
+    });
+
 
     bot.on('message_created', (ctx: any) =>
       ctx.reply('Я ещё нахожусь в разработке и не могу ответить на ваш вопрос.')
     );
 
+
     await bot.start();
-    console.log('Бот успешно запущен и слушает события.');
+    
   } catch (err: any) {
     console.error('Ошибка при запуске бота:', err.message || err);
 
