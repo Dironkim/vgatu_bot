@@ -15,7 +15,6 @@ async function startBot() {
     try {
         console.log('Запуск бота...');
         bot.on('bot_started', (ctx) => {
-            ctx.reply('Привет! Я - официальный чат-бот Вятского агротехнологического университета.');
             const user = ctx.user || ctx.message?.user;
             if (user) {
                 const { id, first_name, last_name, username } = user;
